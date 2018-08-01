@@ -250,6 +250,24 @@ def valid_actions(grid, current_node):
     if y + 1 > m or grid[x, y + 1] == 1:
         valid_actions.remove(Action.EAST)
         # print("Removed EAST")
+    if x - 1 < 0 and y + 1 > m or grid[x - 1, y + 1] == 1:
+        valid_actions.remove(Action.NORTHEAST)
+        # print("Removed NORTHEAST")
+    if x - 1 < 0 and y - 1 < 0 or grid[x - 1,y - 1] == 1:
+        valid_actions.remove(Action.NORTHWEST)
+        # print("Removed NORTHWEST")
+    if x + 1 > n and y + 1 > m:
+        valid_actions.remove(Action.SOUTHEAST)
+        # print("Removed SOUTHEAST")
+    try:
+        if grid[x + 1,y + 1] == 1:
+            valid_actions.remove(Action.SOUTHEAST)
+    except:
+        valid_actions.remove(Action.SOUTHEAST)
+        print("SE clash")
+    if x + 1 > n and y -1 < 0 or grid[x + 1,y - 1] == 1:
+        valid_actions.remove(Action.SOUTHWEST)
+        # print("Removed SOUTHWEST")
     return valid_actions
 
 def heuristic(n1, n2):
