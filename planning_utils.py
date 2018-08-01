@@ -53,7 +53,6 @@ def create_grid_and_edges(data, drone_altitude, safety_distance):
     along with Voronoi graph edges given obstacle data and the
     drone's altitude.
     """
-    print(data)
     # minimum and maximum north coordinates
     north_min = np.floor(np.min(data[:, 0] - data[:, 3]))
     north_max = np.ceil(np.max(data[:, 0] + data[:, 3]))
@@ -276,9 +275,6 @@ def heuristic(n1, n2):
 def heuristic_func(position, goal_position):
     return np.abs(position[0] - goal_position[0]) + np.abs(position[1] - goal_position[1])
 
-#def point(p):
-    return np.array([p[0], p[1], 1.])
-
 def point(p):
     return np.array([p[0], p[1], 1.]).reshape(1, -1)
 
@@ -295,8 +291,8 @@ def prune_path(path):
     i = 0
     while i < len(pruned_path) - 2:
         p1 = point(pruned_path[i])
-        p2 = point(pruned_path[i+1])
-        p3 = point(pruned_path[i+2])
+        p2 = point(pruned_path[i + 1])
+        p3 = point(pruned_path[i + 2])
         
         # If the 3 points are in a line remove
         # the 2nd point.
@@ -307,7 +303,7 @@ def prune_path(path):
             # Something subtle here but we can mutate
             # `pruned_path` freely because the length
             # of the list is check on every iteration.
-            pruned_path.remove(pruned_path[i+1])
+            pruned_path.remove(pruned_path[i + 1])
         else:
             i += 1
     return pruned_path
