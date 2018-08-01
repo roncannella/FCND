@@ -1,0 +1,15 @@
+Logs\TLog.txt
+Logs\NavLog.txt
+starting connection
+arming transition
+Searching for a path ...
+[-1.22397450e+02  3.77924791e+01  8.20000000e-02] [-0.09346269 -0.00594342 -0.08249969]
+global home [-122.39745   37.79248    0.     ], position [-1.22397450e+02  3.77924791e+01  8.20000000e-02], local position [-0.09346269 -0.00594342 -0.08249969]
+North offset = -316, east offset = -445
+Local Start and Goal:  (315, 444) (739, 357)
+takeoff transition
+waypoint transition
+landing transition
+disarm transition
+manual transition
+Closing connection ...
