@@ -278,11 +278,13 @@ def heuristic_func(position, goal_position):
 def point(p):
     return np.array([p[0], p[1], 1.]).reshape(1, -1)
 
+
+# this collinearity check  and prune_path never seemed to work right
 def collinearity_check(p1, p2, p3, epsilon=1e-2):
     #m = np.concatenate((p1, p2, p3), 0)
     m = np.vstack((point(p1), point(p2), point(p3)))
     det = np.linalg.det(m)
-    print("Determinate: {}".format(det))
+    #print("Determinate: {}".format(det))
     return abs(det) < epsilon
 
 def prune_path(path):
@@ -318,10 +320,10 @@ def bres_prune(grid, path):
     i = 0
     while i < len(pruned_path) - 2:
         p1 = pruned_path[i]
-        p2 = pruned_path[i+1]
-        p3 = pruned_path[i+2]
-        print("Points: P1: {} P2: {} P3: {}".format(p1, p2, p3))
-        # if the line between p1 and p2 doesn't hit an obstacle
+        p2 = pruned_path[i + 1]
+        p3 = pruned_path[i + 2]
+        #print("Points: P1: {} P2: {} P3: {}".format(p1, p2, p3))
+        # if the line between p1 and p3 doesn't hit an obstacle
         # remove the 2nd point.
         # The 3rd point now becomes the 2nd point
         # and the check is redone with a new third point
@@ -331,7 +333,7 @@ def bres_prune(grid, path):
             # `pruned_path` freely because the length
             # of the list is checked on every iteration.
             pruned_path.remove(p2)
-    
+
         else:
             i += 1
     return pruned_path
@@ -349,6 +351,4 @@ def find_start_goal(skel, start, goal):
     near_start = skel_cells[start_min_dist]
     goal_min_dist = np.linalg.norm(np.array(goal) - np.array(skel_cells), axis=1).argmin()
     near_goal = skel_cells[goal_min_dist]
-    
     return near_start, near_goal
-

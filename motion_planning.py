@@ -2,12 +2,10 @@ import argparse
 import time
 import msgpack
 from enum import Enum, auto
-from skimage.morphology import medial_axis
-from skimage.util import invert
 import numpy as np
 import networkx as nx
 
-from planning_utils import a_star_ng, heuristic, create_grid_and_edges, bres_prune, prune_path, find_start_goal
+from planning_utils import a_star_ng, heuristic, create_grid_and_edges, bres_prune
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -90,7 +88,8 @@ class MotionPlanning(Drone):
         print("waypoint transition")
         self.target_position = self.waypoints.pop(0)
         print('target position', self.target_position)
-        self.cmd_position(self.target_position[0], self.target_position[1], self.target_position[2], self.target_position[3])
+        self.cmd_position(self.target_position[0], self.target_position[1],
+                            self.target_position[2], self.target_position[3])
 
     def landing_transition(self):
         self.flight_state = States.LANDING
@@ -113,7 +112,7 @@ class MotionPlanning(Drone):
 
     def send_waypoints(self):
         print("Sending waypoints to simulator ...")
-        
+
         data = msgpack.dumps(self.waypoints)
         self.connection._master.write(data)
 
@@ -130,94 +129,55 @@ class MotionPlanning(Drone):
         with open(file) as f:
             start_lat_lon_raw = f.readline().strip()
         lltemp = start_lat_lon_raw.split(',')
-        print(lltemp)
+        self.lat0 = np.float(lltemp[0][5:])
+        self.lon0 = np.float(lltemp[1][5:])
 
         # TODO: set home position to (lon0, lat0, 0)
-        self.set_home_position(np.float(lltemp[1][5:]), np.float(lltemp[0][5:]), 0)
+        self.set_home_position(self.lon0, self.lat0, 0)
 
         # TODO: retrieve current global position
-        print(self.global_position, self.local_position)
-        # TODO: convert to current local position using global_to_local()
-        curr_local = global_to_local(self.global_position, self.global_home)
+        print("Current Global Position: {} ".format(self.global_position))
 
-        print('global home {0}, position {1}, local position {2}'.format(self.global_home, self.global_position,
-                                                                         self.local_position))
+        # TODO: convert to current local position using global_to_local()
+        print("Local Position from Global Position: {}".format(global_to_local(self.global_position, self.global_home)))
+
         # Read in obstacle map
         data = np.loadtxt('colliders.csv', delimiter=',', dtype='Float64', skiprows=2)
 
         # Define a grid for a particular altitude and safety margin around obstacles
-        # grid = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
         grid, edges, north_offset, east_offset = create_grid_and_edges(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
-        '''
-        plt.imshow(grid, origin='lower', cmap='Greys')
-
-        # Stepping through each edge
-        for e in edges:
-            p1 = e[0]
-            p2 = e[1]
-            plt.plot([p1[1], p2[1]], [p1[0], p2[0]], 'b-')
-
-        plt.xlabel('EAST')
-        plt.ylabel('NORTH')
-        plt.show()
-        '''
-        # print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
-        # Define starting point on the grid (this is just grid center)
-        # grid_start = (-north_offset, -east_offset)
-        start_ne = (-north_offset, -east_offset)
 
         # TODO: convert start position to current position rather than map center
+        start_ne = (-north_offset, -east_offset)
+        # start_ne = global_to_local(self.global_position, self.global_home)[:2]
+        # print("Converted Start: {}  Grid Start: {}".format(start_ne, local_start_ne))
+
         # TODO: adapt to set goal as latitude / longitude position and convert
         goal_ne = (-north_offset + 400, -east_offset - 100)
 
-        # Run A* to find a path from start to goal
-        # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation
-        # or move to a different search space such as a graph (not done here)
-        # path, _ = a_star(grid, heuristic_func, skel_start, skel_goal)
         G = nx.Graph()
         for e in edges:
             p1 = e[0]
             p2 = e[1]
             dist = np.linalg.norm(np.array(p2) - np.array(p1))
             G.add_edge(p1, p2, weight=dist)
+
         start_ne_g = closest_point(G, start_ne)
+
         goal_ne_g = closest_point(G, goal_ne)
-        print(start_ne_g)
-        print(goal_ne_g)
 
         path, cost = a_star_ng(G, heuristic, start_ne_g, goal_ne_g)
-        print(len(path))
-        path = bres_prune(grid, path)
-        print("Path Length: {}".format(len(path)))
-        '''
-        plt.imshow(grid, origin='lower', cmap='Greys') 
-        for e in edges:
-            p1 = e[0]
-            p2 = e[1]
-            plt.plot([p1[1], p2[1]], [p1[0], p2[0]], 'b-')
-            
-        plt.plot([start_ne[1], start_ne_g[1]], [start_ne[0], start_ne_g[0]], 'r-')
-        for i in range(len(path)-1):
-            p1 = path[i]
-            p2 = path[i+1]
-            plt.plot([p1[1], p2[1]], [p1[0], p2[0]], 'r-')
-        plt.plot([goal_ne[1], goal_ne_g[1]], [goal_ne[0], goal_ne_g[0]], 'r-')
-            
-        plt.plot(start_ne[1], start_ne[0], 'gx')
-        plt.plot(goal_ne[1], goal_ne[0], 'gx')
-
-        plt.xlabel('EAST', fontsize=20)
-        plt.ylabel('NORTH', fontsize=20)
-        plt.show()
-        '''
 
         # TODO: prune path to minimize number of waypoints
+        path = bres_prune(grid, path)
+        print("Path Length: {}".format(len(path)))
+
         # Convert path to waypoints
-        print([w for w in path])
         waypoints = [[int(p[0] + north_offset), int(p[1] + east_offset), TARGET_ALTITUDE, 0] for p in path]
+
         # Set self.waypoints
         self.waypoints = waypoints
-        print(self.waypoints)
+
         # TODO: send waypoints to sim (this is just for visualization of waypoints)
         self.send_waypoints()
 
@@ -235,7 +195,6 @@ def closest_point(graph, current_point):
             closest_point = p
             dist = d
     return closest_point
-
 
     def start(self):
         self.start_log("Logs", "NavLog.txt")
