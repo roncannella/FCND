@@ -169,7 +169,7 @@ def a_star_ng(graph, heuristic, start, goal):
         current_cost = item[0]
         current_node = item[1]
 
-        if current_node == goal:        
+        if current_node == goal:
             print('Found a path.')
             found = True
             break
@@ -187,7 +187,6 @@ def a_star_ng(graph, heuristic, start, goal):
     path = []
     path_cost = 0
     if found:
-        
         # retrace steps
         path = []
         n = goal
@@ -197,7 +196,8 @@ def a_star_ng(graph, heuristic, start, goal):
             path.append(branch[n][1])
             n = branch[n][1]
         path.append(branch[n][1])
-            
+    # Wanted the sets to have ints, but had floats, so casted them to int
+    path = [(int(p[0]), int(p[1])) for p in path]
     return path[::-1], path_cost
 
 

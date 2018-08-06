@@ -149,14 +149,22 @@ class MotionPlanning(Drone):
         print("North Offset: {} East Offset: {}".format(north_offset, east_offset))
 
         # TODO: convert start position to current position rather than map center
-        # start_ne = (-north_offset, -east_offset)
+        # Get current Gloabl position relative to home in grid coords
         self.north, self.east = global_to_local(self.global_position, self.global_home)[:2]
-        
-        start_ne = [int(self.north + -north_offset), int(self.east+-east_offset)]
-
+        # Add grid offsets
+        start_ne = [int(self.north + -north_offset), int(self.east+ -east_offset)]
         print("Start NE: {}".format(start_ne))
+
         # TODO: adapt to set goal as latitude / longitude position and convert
-        goal_ne = (-north_offset + 400, -east_offset - 100)
+        # Specify the coords in Long/Lat
+        global_goal = [-122.399189, 37.796400, 0]
+        # Get the local grid from global position coords
+        goal_gl = global_to_local(global_goal, self.global_home)[:2]
+        # Add the grid offset
+        goal_ne = [int(goal_gl[0] + -north_offset), int(goal_gl[1] + -east_offset)]
+
+        #goal_ne = (-north_offset + 400, -east_offset - 100)
+        print("Goal NE from Lat/Lon: {}".format(goal_ne))
 
         G = nx.Graph()
         for e in edges:
