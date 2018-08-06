@@ -310,7 +310,7 @@ def prune_path(path):
             i += 1
     return pruned_path
 
-
+# this is form Mike Hahn's example
 def bres_prune(grid, path): 
     """
     Use the Bresenham module to trim uneeded waypoints from path
@@ -333,7 +333,6 @@ def bres_prune(grid, path):
             # `pruned_path` freely because the length
             # of the list is checked on every iteration.
             pruned_path.remove(p2)
-
         else:
             i += 1
     return pruned_path

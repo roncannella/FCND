@@ -120,7 +120,7 @@ class MotionPlanning(Drone):
         self.flight_state = States.PLANNING
         print("Searching for a path ...")
         TARGET_ALTITUDE = 5
-        SAFETY_DISTANCE = 3
+        SAFETY_DISTANCE = 5
 
         self.target_position[2] = TARGET_ALTITUDE
 
@@ -166,6 +166,7 @@ class MotionPlanning(Drone):
         #goal_ne = (-north_offset + 400, -east_offset - 100)
         print("Goal NE from Lat/Lon: {}".format(goal_ne))
 
+        # Use the edges from the grid creation to great the NetworkX graph
         G = nx.Graph()
         for e in edges:
             p1 = e[0]
@@ -173,10 +174,12 @@ class MotionPlanning(Drone):
             dist = np.linalg.norm(np.array(p2) - np.array(p1))
             G.add_edge(p1, p2, weight=dist)
 
+        # Determine the closet point to start and goal
         start_ne_g = closest_point(G, start_ne)
 
         goal_ne_g = closest_point(G, goal_ne)
 
+        # Use A* on the graph to determine a path
         path, cost = a_star_ng(G, heuristic, start_ne_g, goal_ne_g)
 
         # TODO: prune path to minimize number of waypoints
